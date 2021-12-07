@@ -1,81 +1,56 @@
-import json
-import os
-from spider import SentenceSpider, KeywordSpider
+import threading
 from queue import Queue
+from spider import Spider
+from domain import *
+from general import *
 
 
-class Main:
-    def __init__(self):
-        self.browsers = []
-        self.threadmax = 0
-        self.pagemax = 0
-        self.citestyle = ""
-        self.skeywords = []
-        self.ssentence = ""
+class SpiderMain:
 
+    limit_count = 0
 
-    def startup(self):
+    def __init__(self, folder_name, base_link, threads, external, max, maxnum, limit_count):
+
+        self.FOLDER_NAME = folder_name
+        self.BASE_LINK = base_link
+        self.DOMAIN_NAME = get_domain_name(base_link)
+        self.THREADS = threads
+        self.EXTERNAL = external
+        self.MAX = max
+        self.MAXNUM = maxnum
+        self.QUEUE_FILE = folder_name + '/queue.txt'
+        self.CRAWLED_FILE = folder_name + '/crawled.txt'
+        self.queue = Queue()
+        self.limit_count = limit_count
+        Spider(folder_name, base_link, self.DOMAIN_NAME, max, maxnum, external, 0)
+
+    def create_threads(self):
         try:
-            with open("config.json", "r") as configfile:
-                settings = json.loads(configfile.read())
-            self.browsers = settings["browsers"]
-            self.threadmax = settings["threadmax"]
-            self.pagemax = settings["pagemax"]
-            self.citestyle = settings["citestyle"]
-            os.makedirs("results")
-            queue = os.path.join("results", "queue.txt")
-            pages = os.path.join("results", "pages.txt")
-            with open(queue, "x") as file:
-                file.write("")
-            with open(pages, "x") as file:
-                file.write("")
+            for _ in range(self.THREADS):
+                t = threading.Thread(target=self.work)
+                t.daemon = True
+                t.start()
+        except Exception as e:
+            print(e)
 
-        except:
-            with open("config.json", "x") as configfile:
-                settings = {
-                    "browsers":["google", "duckduckgo"],
-                    "threadmax":8,
-                    "pagemax":50,
-                    "citestyle":"MLA"
-                }
-                dump = json.dumps(settings)
-                configfile.write(dump)
-                self.browsers = settings["browsers"]
-                self.threadmax = settings["threadmax"]
-                self.pagemax = settings["pagemax"]
-                self.citestyle = settings["citestyle"]
+    def work(self):
+        while True:
+            url = self.queue.get()
+            Spider.crawl_page(threading.current_thread().name, url)
+            self.queue.task_done()
 
-    def keywords(self, keyword):
-        self.skeywords = keyword.split(",")
-        for keyword in self.skeywords:
-            return
+    def create_jobs(self):
+        for link in file_to_set(self.QUEUE_FILE):
+            self.queue.put(link)
+        self.queue.join()
+        self.crawl()
 
-        return 0
+    def crawl(self):
+        queued_links = file_to_set(self.QUEUE_FILE)
+        if len(queued_links) > 0:
+            print(str(len(queued_links)) + " links in the queue")
+            self.create_jobs()
 
-    def sentence(self, ssentance):
-        FOLDER_NAME = "user-search"
-        queue = Queue()
-        SentenceSpider(self.ssentence, self.browsers)
-        return 0
-
-    def start(self):
-        self.startup()
-        print("Search by keyword or by sentence?")
-
-        choice = input(":\t").lower
-
-        if choice == "keyword":
-            print("What are your keywords? (Seperate them with commas)")
-
-            keyword = input(":\t")
-            self.keywords(keyword)
-
-        elif choice == "sentence":
-            print("What is your sentence?")
-
-            ssentance = input(":\t")
-            self.sentence(ssentance)
-
-
-main = Main()
-main.start()
+    def kick_start(self):
+        self.create_threads()
+        self.crawl()
