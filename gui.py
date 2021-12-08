@@ -32,9 +32,38 @@ class Main:
             with open(self.settingsdir, 'r') as f:
                 self.configs = json.loads(f.read())
 
+    # /***************************************************************************************
+    #  Function that clears the window
+    # ***************************************************************************************\
     @staticmethod
     def clear_screen():
         _ = system('cls')
+    
+    def finish(self):
+        def export_to_csv():
+            import csv
+            with open('crawled.csv', 'x', newline='') as csvfile:
+                with open("crawled.txt", "r") as file:
+                    url_list = file.read()
+                    url_list = url_list.split("\n")
+                    csvwriter = csv.writer(csvfile, delimiter=' ', quotechar = '|', quoting=csv.QUOTE_MINIMAL)
+                    for url in url_list:
+                        csvwriter.writerow(url)
+            return
+        main.clear_screen()
+        print("The crawler has finished")
+        print("You can either view the URL's in the CLI, export the file to a CSV format")
+        print("or exit the program right now")
+        print("V to view, E to export and Q to quit")
+        choice = input("")
+        if choice == "V" or choice == "view" or choice == "v":
+            return
+        elif choice == "E" or choice == "export" or choice == "e":
+            export_to_csv()
+        elif choice == "Q" or choice == "quit" or choice == "q":
+            return
+        else:
+            print("Invalid answer")
 
     # /***************************************************************************************
     #  Function that calls the crawler

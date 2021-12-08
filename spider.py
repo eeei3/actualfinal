@@ -48,7 +48,7 @@ class Spider:
             if not Spider.external:
                 Spider.add_links_to_queue(Spider.gather_links(page_url))
             else:
-                Spider.add_links(Spider.gather_links(page_url))
+                Spider.add_links_to_queue_no_check(Spider.gather_links(page_url))
             Spider.queue.remove(page_url)
             Spider.crawled.add(page_url)
             Spider.update_files()
@@ -88,7 +88,7 @@ class Spider:
 
     # Saves queue data to project files without checking domain
     @staticmethod
-    def add_links(links):
+    def add_links_to_queue_no_check(links):
         try:
             for url in links:
                 if (url in Spider.queue) or (url in Spider.crawled):
@@ -102,3 +102,10 @@ class Spider:
     def update_files():
         set_to_file(Spider.queue, Spider.queue_file)
         set_to_file(Spider.crawled, Spider.crawled_file)
+    
+    @staticmethod
+    def limit_reached():
+        for url in Spider.queue:
+            Spider.queue.remove(url)
+    
+    

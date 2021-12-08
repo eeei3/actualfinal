@@ -9,20 +9,20 @@ class SpiderMain:
 
     limit_count = 0
 
-    def __init__(self, folder_name, base_link, threads, external, max, maxnum, limit_count):
+    def __init__(self, folder_name, base_link, threads, external, urlmax, maxnum, limit_count):
 
         self.FOLDER_NAME = folder_name
         self.BASE_LINK = base_link
         self.DOMAIN_NAME = get_domain_name(base_link)
         self.THREADS = threads
         self.EXTERNAL = external
-        self.MAX = max
+        self.MAX = urlmax
         self.MAXNUM = maxnum
         self.QUEUE_FILE = folder_name + '/queue.txt'
         self.CRAWLED_FILE = folder_name + '/crawled.txt'
         self.queue = Queue()
         self.limit_count = limit_count
-        Spider(folder_name, base_link, self.DOMAIN_NAME, max, maxnum, external, 0)
+        Spider(folder_name, base_link, self.DOMAIN_NAME, urlmax, maxnum, external, 0)
 
     def create_threads(self):
         try:
