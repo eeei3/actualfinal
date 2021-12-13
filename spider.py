@@ -52,6 +52,7 @@ class Spider:
             Spider.queue.remove(page_url)
             Spider.crawled.add(page_url)
             Spider.update_files()
+            print(page_url + " Has been crawled")
 
     # Converts raw response data into readable information and checks for proper html formatting
     @staticmethod
@@ -59,17 +60,17 @@ class Spider:
         html_string = ''
         try:
             response = urlopen(page_url)
-            if Spider.spiderlimits == False or Spider.limitnum > Spider.limit_counter:
+            if Spider.spiderlimits or (Spider.limitnum > Spider.limit_counter):
                 if 'text/html' in response.getheader('Content-Type'):
                     html_bytes = response.read()
                     html_string = html_bytes.decode("utf-8")
                 finder = LinkFinder(Spider.base_url, page_url)
                 finder.feed(html_string)
-                Spider.limit_counter += 1
             else:
-                print("We are done here")
+                Spider.limit_reached()
+            Spider.limit_counter += 1
         except Exception as e:
-            print(str(e))
+            print(str(e) + "2")
             return set()
         return finder.page_links()
 
@@ -81,7 +82,7 @@ class Spider:
                 if (url in Spider.queue) or (url in Spider.crawled):
                     continue
                 if Spider.domain_name != get_domain_name(url):
-                    continue 
+                    continue
                 Spider.queue.add(url)
         except Exception as e:
             print(e)
@@ -95,8 +96,7 @@ class Spider:
                     continue
                 Spider.queue.add(url)
         except Exception as e:
-            print(str(e))
-            
+            print(str(e) + "1")
 
     @staticmethod
     def update_files():
@@ -107,5 +107,6 @@ class Spider:
     def limit_reached():
         for url in Spider.queue:
             Spider.queue.remove(url)
+        return
     
     
